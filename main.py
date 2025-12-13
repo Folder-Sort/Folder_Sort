@@ -1,6 +1,5 @@
 import os
 import shutil
-from collections import defaultdict
 
 # --- Custom Data Structure: DirectoryNode (The Tree) ---
 class DirectoryNode:
@@ -14,6 +13,11 @@ class DirectoryNode:
         self.children = {}  # Dictionary mapping child name to DirectoryNode object
 
     def add_child(self, name, is_file=False):
+        """
+        The primary method for building the tree. 
+        It checks if a child (folder) already exists by name; 
+        if so, it returns the existing node; otherwise, it creates and adds a new one.
+        """
         if name not in self.children:
             self.children[name] = DirectoryNode(name, is_file)
         return self.children[name]
@@ -68,10 +72,10 @@ class Sorter:
             '.cpp': 'Code', 
             '.c': 'Code', 
             '.js': 'Code',
-            '.h': 'Code',        # <-- NEW
-            '.hpp': 'Code',      # <-- NEW
+            '.h': 'Code',        
+            '.hpp': 'Code',      
             # Executables
-            '.exe': 'Executables', # <-- NEW
+            '.exe': 'Executables', 
             # Other (Default)
             '.txt': 'Other', '.zip': 'Other', '.rar': 'Other',
         }
@@ -96,7 +100,7 @@ class Sorter:
         # Check for keywords in the filename (case-insensitive)
         name_lower = filename.lower()
         
-        # 🌟 NOTE: Since we iterate through the map, the first match wins.
+        # NOTE: Since we iterate through the map, the first match wins.
         # Ensure your most specific keywords (like 'dsa') come before general ones 
         # (like 'data') if you were to change the map ordering, but for simple
         # matching, the current iteration is fine.
@@ -113,9 +117,6 @@ class Sorter:
         in memory based on the classification rules.
         """
         print("\n--- Phase 1: Building Tree Structure in Memory ---")
-        
-        # We NO LONGER pre-create all known course folders. They will be created 
-        # only when a file is classified into them, addressing Issue 2.
         
         # Add the default 'Unsorted' folder to the root
         self.structure_tree.add_child('Unsorted') 
@@ -167,8 +168,6 @@ class Sorter:
         # Start traversal from the root's children (the Course Folders)
         for course_name, course_node in self.structure_tree.children.items():
             
-            # 🌟 FIX for Issue 2: Skip course folders that have no files assigned 
-            # (i.e., no Type folders under them, except for the default 'Unsorted')
             if not course_node.children and course_name != 'Unsorted':
                 print(f"  ** Skipping empty course folder: {course_name}")
                 continue
@@ -207,13 +206,8 @@ class Sorter:
 # --- Main Execution ---
 if __name__ == "__main__":
     
-    # !!! YOU MUST CHANGE THIS TO YOUR ACTUAL DIRECTORY PATH !!!
+    # ! YOU MUST CHANGE THIS TO YOUR ACTUAL DIRECTORY PATH 
     TARGET_DIRECTORY = "./test_dir" 
-    
-    # -------------------------------------------------------------------------
-    # 🌟 FIX for Issue 1: Removed the entire dummy file creation setup block.
-    # The script now ONLY runs on the directory you specify.
-    # -------------------------------------------------------------------------
 
     # 2. Initialize and Run Sorter
     if os.path.isdir(TARGET_DIRECTORY):
