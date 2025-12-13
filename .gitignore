@@ -1,0 +1,6 @@
+test_dir/
+# Virtual environment
+bin/
+include/
+lib/
+pyvenv.cfg
