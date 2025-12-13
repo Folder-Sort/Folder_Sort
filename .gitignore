@@ -1,4 +1,5 @@
 test_dir/
+test_dir_(backup)/
 # Virtual environment
 bin/
 include/

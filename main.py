@@ -6,7 +6,7 @@ from collections import defaultdict
 class DirectoryNode:
     """
     Represents a node in the directory structure tree.
-    Each node corresponds to a folder or a file in the final structure.
+    (No changes here, the core data structure is sound)
     """
     def __init__(self, name, is_file=False):
         self.name = name
@@ -14,13 +14,11 @@ class DirectoryNode:
         self.children = {}  # Dictionary mapping child name to DirectoryNode object
 
     def add_child(self, name, is_file=False):
-        """Adds a child node (folder or file) to the current node."""
         if name not in self.children:
             self.children[name] = DirectoryNode(name, is_file)
         return self.children[name]
 
     def __repr__(self):
-        """Prints a human-readable representation of the node."""
         return f"<Node: {self.name}{' (FILE)' if self.is_file else ''} with {len(self.children)} children>"
 
 # --- Sorter Class (The Algorithm) ---
@@ -31,12 +29,11 @@ class Sorter:
     """
     def __init__(self, root_dir):
         self.root_dir = os.path.abspath(root_dir)
-        # 1. ROOT of the Tree
         self.structure_tree = DirectoryNode("ROOT") 
         
         # 2. Key Mappings (The 'Rules' for Sorting)
         
-        # Course Mapping: Keywords in filename -> Course Folder Name
+        # 🌟 FIX: Updated self.course_map with user's specific entries
         self.course_map = {
             'data structures': 'Data Structures and Algorithms',
             'dsa': 'Data Structures and Algorithms',
@@ -53,15 +50,18 @@ class Sorter:
             'ml': 'Machine Learning (ML)',
             'deep learning': 'Machine Learning (ML)',
             'ai': 'Machine Learning (ML)',
-            'communication': 'Communication and Presentation skills'
+            'communication': 'Communication and Presentation Skills',
+            'statistics': 'Statistics'
         }
         
-        # Extension Mapping: File extension -> Subfolder Type Name
+        # 🌟 FIX: Separate folders for PDF, DOCX, and PPTX
         self.ext_map = {
             # Videos
             '.mp4': 'Videos', '.avi': 'Videos', '.mov': 'Videos', '.mkv': 'Videos',
-            # Documents/Lectures
-            '.pdf': 'Lecture Notes/PDFs', '.docx': 'Lecture Notes/PDFs', '.pptx': 'Lecture Notes/PDFs',
+            # Documents/Lectures (Separate folders)
+            '.pdf': 'Lecture Notes (PDF)', 
+            '.docx': 'Lecture Notes (DOCX)', 
+            '.pptx': 'Presentations (PPTX)',
             # Code
             '.py': 'Code', '.java': 'Code', '.cpp': 'Code', '.c': 'Code', '.js': 'Code',
             # Other (Default)
@@ -79,17 +79,23 @@ class Sorter:
         # Determine File Type/Extension Folder
         _, ext = os.path.splitext(filename)
         ext = ext.lower()
-        file_type_folder = self.ext_map.get(ext, 'Unclassified')
+        # Default for unrecognized extension
+        file_type_folder = self.ext_map.get(ext, 'Unclassified') 
         
         # Determine Course Folder
         course_folder = 'Unsorted' # Default course
         
         # Check for keywords in the filename (case-insensitive)
         name_lower = filename.lower()
+        
+        # 🌟 NOTE: Since we iterate through the map, the first match wins.
+        # Ensure your most specific keywords (like 'dsa') come before general ones 
+        # (like 'data') if you were to change the map ordering, but for simple
+        # matching, the current iteration is fine.
         for keyword, course_name in self.course_map.items():
             if keyword in name_lower:
                 course_folder = course_name
-                break
+                break # Stop at the first match
 
         return course_folder, file_type_folder
 
@@ -100,27 +106,27 @@ class Sorter:
         """
         print("\n--- Phase 1: Building Tree Structure in Memory ---")
         
-        # Ensure initial course folders exist in the tree
-        for course_name in self.known_courses:
-            self.structure_tree.add_child(course_name)
+        # We NO LONGER pre-create all known course folders. They will be created 
+        # only when a file is classified into them, addressing Issue 2.
         
-        # Add the default folders
-        self.structure_tree.add_child('Unsorted')
+        # Add the default 'Unsorted' folder to the root
+        self.structure_tree.add_child('Unsorted') 
         
         # Iterate through all items in the root directory
         try:
             for item in os.listdir(self.root_dir):
                 item_path = os.path.join(self.root_dir, item)
                 
-                # We only process files, skipping folders or the script itself
+                # Only process files
                 if os.path.isfile(item_path):
                     
                     course, file_type = self._get_classification(item)
                     
-                    # 1. Get the Course Node (e.g., 'Data Structures and Algorithms')
+                    # 1. Get/Create the Course Node (e.g., 'Data Structures and Algorithms')
+                    # This implicitly creates the node if it doesn't exist.
                     course_node = self.structure_tree.add_child(course)
                     
-                    # 2. Get the Type Node (e.g., 'Videos') under the Course Node
+                    # 2. Get/Create the Type Node (e.g., 'Videos') under the Course Node
                     type_node = course_node.add_child(file_type)
                     
                     # 3. Add the File as a leaf node under the Type Node
@@ -128,9 +134,8 @@ class Sorter:
                     
                     print(f"  > Classified '{item}' to: {course}/{file_type}")
                 
-                # Exclude subdirectories to keep the scope clean, unless they are 
-                # part of the destination structure itself
-                elif os.path.isdir(item_path) and item not in self.known_courses and item not in ['Unsorted']:
+                # Exclude subdirectories (folders) from processing
+                elif os.path.isdir(item_path):
                     print(f"  > Skipping existing directory: {item}")
                     
         except FileNotFoundError:
@@ -138,7 +143,6 @@ class Sorter:
             return False
             
         print("Tree building complete.")
-        # print(self.structure_tree.children) # Optional: inspect the root children
         return True
     
     def execute_sorting(self):
@@ -155,10 +159,12 @@ class Sorter:
         # Start traversal from the root's children (the Course Folders)
         for course_name, course_node in self.structure_tree.children.items():
             
-            # Skip course folders that have no files assigned (no type children)
-            if not course_node.children:
+            # 🌟 FIX for Issue 2: Skip course folders that have no files assigned 
+            # (i.e., no Type folders under them, except for the default 'Unsorted')
+            if not course_node.children and course_name != 'Unsorted':
+                print(f"  ** Skipping empty course folder: {course_name}")
                 continue
-                
+            
             # Create the main Course Folder
             course_path = os.path.join(self.root_dir, course_name)
             os.makedirs(course_path, exist_ok=True)
@@ -183,7 +189,7 @@ class Sorter:
                             shutil.move(src_path, dest_path)
                             print(f"      > Moved: {file_name}")
                         except FileNotFoundError:
-                            print(f"      ! WARNING: Source file not found: {file_name}")
+                            print(f"      ! WARNING: Source file not found: {file_name}. Already moved or missing.")
                         except Exception as e:
                             print(f"      ! ERROR moving {file_name}: {e}")
                             
@@ -193,41 +199,20 @@ class Sorter:
 # --- Main Execution ---
 if __name__ == "__main__":
     
-    # ! CHANGE THIS TO YOUR DIRECTORY PATH
-    TARGET_DIRECTORY = "./test_dir"
+    # !!! YOU MUST CHANGE THIS TO YOUR ACTUAL DIRECTORY PATH !!!
+    TARGET_DIRECTORY = "./test_dir" 
     
-    # * 1. - Create a temporary directory and dummy files for testing
-    if not os.path.exists(TARGET_DIRECTORY):
-        os.makedirs(TARGET_DIRECTORY)
-        print(f"Created test directory: {TARGET_DIRECTORY}")
-        
-    dummy_files = [
-        "Data Structures DSA-Lecture 1.pdf",
-        "Algorithm-QuickSort-Code.py",
-        "ML_Deep Learning Intro.mp4",
-        "Image Processing Computer Vision Notes.docx",
-        "CCNA Networking Subnetting.pdf",
-        "Control Engineering - PID Design.avi",
-        "NLP-Text-Pre-processing-Example.ipynb",
-        "random_document.txt",
-        "misc_file.zip",
-        "A-File-With-No-Keyword.log",
-        "Another-DSA-Video.mkv"
-    ]
-    
-    # Create the dummy files in the target directory
-    for f in dummy_files:
-        try:
-            with open(os.path.join(TARGET_DIRECTORY, f), 'w') as temp_file:
-                temp_file.write(f"This is the content of {f}")
-        except Exception as e:
-            print(f"Could not create dummy file {f}: {e}")
+    # -------------------------------------------------------------------------
+    # 🌟 FIX for Issue 1: Removed the entire dummy file creation setup block.
+    # The script now ONLY runs on the directory you specify.
+    # -------------------------------------------------------------------------
 
-    # * 2. Initialize and Run Sorter
-    if os.path.exists(TARGET_DIRECTORY):
+    # 2. Initialize and Run Sorter
+    if os.path.isdir(TARGET_DIRECTORY):
         sorter = Sorter(TARGET_DIRECTORY)
         
         if sorter.build_structure_tree():
             sorter.execute_sorting()
     else:
-        print("Please create the target directory or adjust the TARGET_DIRECTORY path.")
+        print(f"Error: Target directory not found or is not a directory: {TARGET_DIRECTORY}")
+        print("Please ensure the path is correct and the folder exists.")
