@@ -43,6 +43,7 @@ class Sorter:
             'algorithm': 'Data Structures and Algorithms',
             'image': 'Image Processing',
             'computer vision': 'Image Processing',
+            'dip': "Image Processing",
             'ccna': 'CCNA Networking',
             'network': 'CCNA Networking',
             'control': 'Control Engineering',
@@ -52,6 +53,7 @@ class Sorter:
             'ml': 'Machine Learning (ML)',
             'deep learning': 'Machine Learning (ML)',
             'ai': 'Machine Learning (ML)',
+            'communication': 'Communication and Presentation skills'
         }
         
         # Extension Mapping: File extension -> Subfolder Type Name
@@ -191,10 +193,10 @@ class Sorter:
 # --- Main Execution ---
 if __name__ == "__main__":
     
-    # !!! CHANGE THIS TO YOUR DIRECTORY PATH !!!
+    # ! CHANGE THIS TO YOUR DIRECTORY PATH
     TARGET_DIRECTORY = "./test_dir"
     
-    # 1. Setup - Create a temporary directory and dummy files for testing
+    # * 1. - Create a temporary directory and dummy files for testing
     if not os.path.exists(TARGET_DIRECTORY):
         os.makedirs(TARGET_DIRECTORY)
         print(f"Created test directory: {TARGET_DIRECTORY}")
@@ -221,7 +223,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Could not create dummy file {f}: {e}")
 
-    # 2. Initialize and Run Sorter
+    # * 2. Initialize and Run Sorter
     if os.path.exists(TARGET_DIRECTORY):
         sorter = Sorter(TARGET_DIRECTORY)
         
