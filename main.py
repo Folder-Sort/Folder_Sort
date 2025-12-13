@@ -58,12 +58,20 @@ class Sorter:
         self.ext_map = {
             # Videos
             '.mp4': 'Videos', '.avi': 'Videos', '.mov': 'Videos', '.mkv': 'Videos',
-            # Documents/Lectures (Separate folders)
+            # Documents/Lectures
             '.pdf': 'Lecture Notes (PDF)', 
             '.docx': 'Lecture Notes (DOCX)', 
             '.pptx': 'Presentations (PPTX)',
-            # Code
-            '.py': 'Code', '.java': 'Code', '.cpp': 'Code', '.c': 'Code', '.js': 'Code',
+            # Code Files (Source/Header)
+            '.py': 'Code', 
+            '.java': 'Code', 
+            '.cpp': 'Code', 
+            '.c': 'Code', 
+            '.js': 'Code',
+            '.h': 'Code',        # <-- NEW
+            '.hpp': 'Code',      # <-- NEW
+            # Executables
+            '.exe': 'Executables', # <-- NEW
             # Other (Default)
             '.txt': 'Other', '.zip': 'Other', '.rar': 'Other',
         }
