@@ -3,11 +3,13 @@ import shutil
 import zipfile
 from flask import Flask, request, send_file, render_template_string
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
 
 # Import the core logic (your Tree Data Structure and Algorithm)
 from sorter import Sorter
 
 app = Flask(__name__)
+CORS(app)
 
 # --- Configuration ---
 # Create a temporary directory for file processing
@@ -42,25 +44,6 @@ def package_sorted_directory(source_dir, output_zip_path):
 
 
 # --- Flask Endpoints ---
-
-
-@app.route("/")
-def index():
-    """Provides a simple HTML form for file upload."""
-    return render_template_string(
-        """
-    <!doctype html>
-    <title>Directory Sorter Web Service</title>
-    <h1>Upload Files for Sorting</h1>
-    <p>Upload a ZIP file containing all the files you want to sort.</p>
-    <form method=post action="/sort" enctype=multipart/form-data>
-      <input type="file" name="file" accept=".zip,.rar,.7zip" />
-      <button type=submit>Upload</button>
-    </form>
-    """
-    )
-
-
 @app.route("/sort", methods=["POST"])
 def sort_directory():
     """

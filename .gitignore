@@ -1,5 +1,6 @@
 test_dir/
 test_dir_(backup)/
+temp_uploads/*
 # Virtual environment
 bin/
 include/

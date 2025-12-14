@@ -6,25 +6,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusMessage = document.getElementById("statusMessage");
   const dropArea = document.getElementById("drop-area");
   const selectFileButton = document.getElementById("selectFileButton");
+  const initiateButton = document.getElementById("initiate");
+  const originalDropAreaText = dropArea.innerHTML;
 
-  // 1. Event Listener for Form Submission
-  dropArea.addEventListener("click", () => zipFileInput.click());
-  zipFileInput.addEventListener("change", () => {
-    if (zipFileInput.files.length > 0) {
-      // Trigger the form's submit event
-      uploadForm.dispatchEvent(new Event("submit"));
-    }
-  });
-
-  if (selectFileButton) {
-    selectFileButton.addEventListener("click", (e) => {
-      e.stopPropagation(); // Stop the event from bubbling up to dropArea unnecessarily
-      zipFileInput.click();
-    });
-  }
-
-  uploadForm.addEventListener("submit", handleFileUpload);
-  async function handleFileUpload(e) {
+  const handleFileUpload = async (e) => {
     // Prevent the browser from submitting the form normally (which would reload the page)
     e.preventDefault();
 
@@ -35,10 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const file = zipFileInput.files[0];
-    const fileName = file.name;
 
     // Update UI state
-    uploadButton.disabled = true;
     statusMessage.textContent =
       "Uploading and Sorting... Please wait. Do not navigate away.";
     statusMessage.style.color = "orange";
@@ -50,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       // 3. Send the Request to the Flask Endpoint
-      const response = await fetch("/sort", {
+      const response = await fetch("http://127.0.0.1:5000/sort", {
         method: "POST",
         body: formData, // Send the FormData object
         // IMPORTANT: Do NOT set Content-Type header; Fetch does it automatically
@@ -106,5 +89,71 @@ document.addEventListener("DOMContentLoaded", () => {
       // Reset UI state
       uploadButton.disabled = false;
     }
+  };
+
+  uploadForm.addEventListener("submit", async (e) => {
+    initiateButton.disabled = true;
+    const originalIntiateButtonHTML = initiateButton.innerHTML;
+    initiateButton.innerHTML = `
+      <span class="text-2xl!">Doing the Magic...</span>
+    `;
+    dropArea.innerHTML = `
+      <div class="loader">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <defs>
+            <mask id="clipping">
+              <polygon points="0,0 100,0 100,100 0,100" fill="black"></polygon>
+              <polygon points="25,25 75,25 50,75" fill="white"></polygon>
+              <polygon points="50,25 75,75 25,75" fill="white"></polygon>
+              <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+              <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+              <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+              <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+            </mask>
+          </defs>
+        </svg>
+        <div class="box"></div>
+      </div>
+    `;
+    await handleFileUpload(e);
+    dropArea.innerHTML = originalDropAreaText;
+    initiateButton.disabled = false;
+    initiateButton.innerHTML = originalIntiateButtonHTML;
+  });
+
+  dropArea.addEventListener("click", () => zipFileInput.click());
+  zipFileInput.addEventListener("change", () => {
+    if (zipFileInput.files.length > 0) {
+      dropArea.innerHTML = `
+      <div
+              class="size-16 rounded-full bg-slate-100 dark:bg-surface-dark flex items-center justify-center shadow-lg group-hover:shadow-neon transition-all duration-300"
+            >
+              <span class="material-symbols-outlined text-4xl!">
+                folder_zip
+              </span>
+            </div>
+            <div class="flex flex-col items-center gap-2 z-10">
+              <p
+                class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em] text-center"
+              >
+                Your File is ready to be sorted!
+              </p>
+            </div>
+          </div>
+      `;
+    }
+  });
+
+  if (selectFileButton) {
+    selectFileButton.addEventListener("click", (e) => {
+      e.stopPropagation(); // Stop the event from bubbling up to dropArea unnecessarily
+      zipFileInput.click();
+    });
   }
+
+  initiateButton.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    uploadForm.dispatchEvent(new Event("submit"));
+  });
 });
