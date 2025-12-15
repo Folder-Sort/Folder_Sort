@@ -18,7 +18,6 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["MAX_CONTENT_LENGTH"] = 150 * 1024 * 1024  # Max 150MB file size
 
 # --- Helper Functions ---
 
